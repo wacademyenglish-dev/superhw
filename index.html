@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WOLF LABS | High Score Log (Homework)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Fonts: Orbitron (Arcade/Tech), Inter (Readability) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === THE RETRO ARCADE (SYNTHWAVE NEON THEME) === */
+        :root {
+            --bg-arcade: #0f0c29;      /* Very deep violet/black */
+            --bg-panel: #1a1638;       /* Deep slate violet */
+            --bg-inset: #09071a;       /* Inset very dark */
+            --neon-cyan: #00f2fe;      /* Synthwave Cyan */
+            --neon-pink: #fe0979;      /* Synthwave Pink */
+            --neon-yellow: #facc15;    /* Arcade Yellow (Gold/Stars) */
+            --neon-green: #10b981;     /* Success Green */
+            --text-main: #f8fafc;      /* Slate 50 (Soft off-white) */
+            --text-muted: #8b85a3;     /* Muted violet-gray */
+            --grid-line: rgba(0, 242, 254, 0.05);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #000;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-arcade { font-family: 'Orbitron', sans-serif; letter-spacing: 0.05em; }
+        .font-pixel { font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+
+        /* === MOBILE PHONE MOCKUP === */
+        #mobile-frame {
+            width: 100%;
+            max-width: 430px; 
+            height: 100dvh;
+            background-color: var(--bg-arcade);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,242,254,0.1);
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        @media (min-width: 431px) {
+            #mobile-frame {
+                height: 90vh;
+                border-radius: 40px;
+                border: 12px solid #1a1a1a;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), inset 0 0 0 2px #333;
+            }
+        }
+
+        /* Ambient glow inside phone */
+        #mobile-frame::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% -10%, rgba(0, 242, 254, 0.15), transparent 50%),
+                        radial-gradient(circle at 50% 110%, rgba(254, 9, 121, 0.1), transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Fake Notch */
+        .phone-notch {
+            display: none;
+        }
+        @media (min-width: 431px) {
+            .phone-notch {
+                display: block;
+                position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+                width: 150px; height: 30px; background-color: #1a1a1a;
+                border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 50;
+            }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; font-size: 12px; font-weight: 600; z-index: 40; position: relative; color: white;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* BUTTONS */
+        .btn-cyan {
+            background: rgba(0, 242, 254, 0.1); color: var(--neon-cyan); border-radius: 4px;
+            font-family: 'Orbitron', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;
+            transition: all 0.2s ease; border: 2px solid var(--neon-cyan); cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2), inset 0 0 10px rgba(0, 242, 254, 0.1);
+        }
+        .btn-cyan:active { background: var(--neon-cyan); color: var(--bg-arcade); box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); transform: scale(0.96); }
+
+        .btn-outline {
+            background: var(--bg-inset); border: 2px solid var(--text-muted); color: var(--text-main); border-radius: 4px;
+            font-family: 'Orbitron', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            transition: all 0.2s ease; cursor: pointer;
+        }
+        .btn-outline:active { background: rgba(255,255,255,0.05); border-color: var(--text-main); transform: scale(0.96); }
+
+        /* QUIZ OPTIONS (MCQ) */
+        .mcq-option {
+            background: var(--bg-inset); border: 2px solid rgba(255,255,255,0.1);
+            transition: all 0.2s ease; cursor: pointer; display: flex; align-items: center; padding: 1.2rem; border-radius: 8px;
+            width: 100%; text-align: left; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .mcq-option:active:not(.locked-check) { transform: scale(0.98); border-color: var(--neon-yellow); background: rgba(250, 204, 21, 0.05); }
+        .mcq-option.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--neon-green); color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);}
+        .mcq-option.wrong { background: rgba(254, 9, 121, 0.1); border-color: var(--neon-pink); color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink);}
+
+        /* ANIMATIONS */
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(3px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-5px, 0, 0); } 40%, 60% { transform: translate3d(5px, 0, 0); } }
+
+        /* PROGRESS BAR */
+        .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); overflow: hidden; border-radius: 2px; margin-bottom: 24px;}
+        .progress-fill { height: 100%; background: var(--neon-cyan); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--neon-cyan);}
+
+        /* NEON GLOW TEXT */
+        .text-glow-cyan { text-shadow: 0 0 15px var(--neon-cyan); }
+        .text-glow-pink { text-shadow: 0 0 15px var(--neon-pink); }
+        .text-glow-yellow { text-shadow: 0 0 15px var(--neon-yellow); }
+
+        #confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <!-- MOBILE CONTAINER -->
+    <div id="mobile-frame">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="phone-notch"></div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="clock">09:41</span>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-xs"></i>
+            </div>
+        </div>
+
+        <!-- START SCREEN (FIXED WITH SCROLL) -->
+        <div id="screen-start" class="flex-grow flex flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            
+            <div class="my-auto flex flex-col items-center w-full">
+                <div class="w-24 h-24 rounded-xl bg-[var(--bg-inset)] mb-8 flex items-center justify-center border border-[var(--neon-cyan)] shadow-[0_0_30px_rgba(0,242,254,0.4)_inset]">
+                    <i class="fas fa-ghost text-5xl text-[var(--neon-cyan)] text-glow-cyan"></i>
+                </div>
+                
+                <div class="text-center space-y-3 w-full">
+                    <p class="text-[var(--neon-yellow)] font-bold text-[10px] tracking-[0.4em] uppercase font-pixel bg-[var(--neon-yellow)]/10 px-4 py-1.5 rounded inline-block border border-[var(--neon-yellow)]/30 text-glow-yellow">Homework Protocol</p>
+                    <h1 class="text-5xl font-black text-white leading-none tracking-widest uppercase font-arcade mt-4 text-glow-pink">Record<br><span class="text-[var(--neon-cyan)] text-glow-cyan">Log</span></h1>
+                    <p class="text-sm text-gray-400 mt-4 leading-relaxed px-2 font-medium font-pixel">Complete this 15-node evaluation to secure your spot on the leaderboard.</p>
+                </div>
+                
+                <div class="w-full bg-[var(--bg-panel)] border border-[var(--neon-cyan)]/30 p-6 rounded-lg mt-8 text-left mb-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    <p class="text-[10px] text-[var(--neon-cyan)] font-bold uppercase tracking-widest border-b border-[var(--neon-cyan)]/20 pb-3 mb-4 font-pixel">> STAGE DATA</p>
+                    <ul class="text-sm text-gray-300 font-inter space-y-3 font-medium">
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/30 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--neon-cyan)] text-[10px]"></i></div> Total Nodes: 15</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/30 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--neon-cyan)] text-[10px]"></i></div> Focus: Comparatives</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/30 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--neon-cyan)] text-[10px]"></i></div> Difficulty: A1 Core</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="startHomework()" class="btn-cyan w-full py-4 text-base mt-8 mb-4 flex-shrink-0">
+                Press Start
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screen-quiz" class="hidden flex-grow flex-col relative z-10 h-full overflow-hidden">
+            <!-- Header -->
+            <div class="pt-6 pb-2 px-6 flex justify-between items-center z-20 flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] font-pixel">Stage Progress</span>
+                    <span class="text-sm font-black text-[var(--neon-cyan)] font-arcade tracking-widest text-glow-cyan" id="progress-text">01 / 15</span>
+                </div>
+                <div class="flex items-center gap-2 bg-[var(--bg-inset)] px-3 py-1.5 rounded border border-gray-700 shadow-sm">
+                    <i class="fas fa-star text-[var(--neon-yellow)] text-[10px]"></i>
+                    <span class="text-xs font-black text-white font-pixel" id="score-text">000</span>
+                </div>
+            </div>
+            
+            <div class="px-6 w-full flex-shrink-0"><div class="progress-container"><div id="progress-bar" class="progress-fill" style="width: 0%;"></div></div></div>
+
+            <!-- Question Area -->
+            <div class="flex-grow overflow-y-auto px-6 pb-32 flex flex-col" id="question-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Next Button Container -->
+            <div class="p-6 bg-gradient-to-t from-[var(--bg-arcade)] via-[var(--bg-arcade)] to-transparent mt-auto hidden absolute bottom-0 left-0 w-full z-30" id="next-btn-container">
+                <button onclick="nextQuestion()" class="btn-cyan w-full py-4 text-base shadow-[0_0_20px_rgba(0,242,254,0.3)] flex justify-center items-center gap-2">
+                    Next Stage <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="screen-result" class="hidden flex-grow flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            <div class="my-auto flex flex-col items-center text-center w-full">
+                <div id="result-icon" class="w-32 h-32 rounded-xl bg-[var(--neon-cyan)]/10 mb-8 flex items-center justify-center border-4 border-[var(--neon-cyan)] shadow-[0_0_40px_rgba(0,242,254,0.4)_inset]">
+                    <i class="fas fa-trophy text-6xl text-[var(--neon-yellow)] text-glow-yellow"></i>
+                </div>
+                
+                <h2 class="text-4xl font-black text-white tracking-widest uppercase font-arcade mb-3 text-glow-cyan" id="result-title">Game Over</h2>
+                <p class="text-[10px] text-[var(--bg-arcade)] font-bold uppercase tracking-[0.2em] border border-[var(--neon-cyan)] px-4 py-1.5 bg-[var(--neon-cyan)] rounded mb-10 shadow-[0_0_15px_rgba(0,242,254,0.4)] font-pixel" id="result-rank">Rank: Champion</p>
+                
+                <div class="w-full bg-[var(--bg-panel)] border border-[var(--neon-cyan)]/30 rounded-lg py-8 mb-12 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    <p class="text-xs text-[var(--neon-cyan)] uppercase tracking-widest font-bold mb-2 font-pixel">Final Score</p>
+                    <p class="text-6xl font-black text-white font-arcade text-glow-cyan" id="final-score">15/15</p>
+                </div>
+            </div>
+            
+            <button onclick="location.reload()" class="btn-outline w-full py-4 text-sm mt-8 mb-4 border-2 flex-shrink-0">
+                Quit Game
+            </button>
+        </div>
+
+    </div>
+
+    <!-- HOMEWORK ENGINE (JS) -->
+    <script>
+        // --- SECURITY & UTILS ---
+        const esc = (s) => s ? String(s).replace(/\\/g, '\\\\').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '') : "";
+
+        // -- Mobile Clock Logic --
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            h = h < 10 ? '0'+h : h;
+            m = m < 10 ? '0'+m : m;
+            document.getElementById('clock').innerText = `${h}:${m}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- HOMEWORK DATA (15 ARCADE QUESTIONS) ---
+        const homeworkData = [
+            {
+                q: "Tim is ___ than Georgie.",
+                options: ["taller", "tallest", "tall"],
+                correct: 0,
+                hint: "Use -er when comparing two people."
+            },
+            {
+                q: "Michal is the ___ person in the room.",
+                options: ["strong", "stronger", "strongest"],
+                correct: 2,
+                hint: "Use 'the -est' for the number one in a group."
+            },
+            {
+                q: "What is the comparative of 'Fast'?",
+                options: ["Fastest", "Faster", "More fast"],
+                correct: 1,
+                hint: "Just add -er."
+            },
+            {
+                q: "My cake is ___ than your cake.",
+                options: ["gooder", "better", "best"],
+                correct: 1,
+                hint: "Good is irregular! The comparative form changes completely."
+            },
+            {
+                q: "What is the superlative of 'Good'?",
+                options: ["The best", "The goodest", "The better"],
+                correct: 0,
+                hint: "Number one! Irregular."
+            },
+            {
+                q: "Tim is the ___ dancer in the group.",
+                options: ["bad", "worst", "worse"],
+                correct: 1,
+                hint: "Bad is irregular! The superlative form means number one at being bad."
+            },
+            {
+                q: "This movie is ___ than the other one.",
+                options: ["worse", "baddest", "badder"],
+                correct: 0,
+                hint: "Bad is irregular! The comparative form."
+            },
+            {
+                q: "To compare two things, we use: Adjective + ER + ___",
+                options: ["that", "then", "than"],
+                correct: 2,
+                hint: "Example: Taller ___ Georgie."
+            },
+            {
+                q: "Georgie is ___ than Sian. (Slow)",
+                options: ["slower", "slowest", "slow"],
+                correct: 0,
+                hint: "Comparative form. Add -er."
+            },
+            {
+                q: "Who is the ___ runner? (Fast)",
+                options: ["faster", "fast", "fastest"],
+                correct: 2,
+                hint: "Superlative form. Add -est."
+            },
+            {
+                q: "Which sentence is CORRECT?",
+                options: ["He is the better dancer.", "He is the best dancer.", "He is best dancer."],
+                correct: 1,
+                hint: "Superlatives need 'THE' + superlative."
+            },
+            {
+                q: "Which word means 'less strong'?",
+                options: ["Weaker", "Slower", "Smaller"],
+                correct: 0,
+                hint: "The opposite of stronger."
+            },
+            {
+                q: "A cheetah is ___ than a turtle.",
+                options: ["slower", "faster", "weaker"],
+                correct: 1,
+                hint: "The cheetah has a lot of speed."
+            },
+            {
+                q: "Which word means 'less tall'?",
+                options: ["Weaker", "Shortest", "Shorter"],
+                correct: 2,
+                hint: "The opposite of taller."
+            },
+            {
+                q: "My phone is ___ than your phone. (Old)",
+                options: ["older", "oldest", "more old"],
+                correct: 0,
+                hint: "Comparative form. Add -er."
+            }
+        ];
+
+        // --- APP STATE ---
+        let currentQ = 0;
+        let score = 0;
+        let isLocked = false;
+
+        // --- NAVIGATION ---
+        function showScreen(id) {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            
+            const target = document.getElementById(id);
+            target.classList.remove('hidden');
+            target.classList.add('flex');
+            target.classList.remove('fade-in');
+            void target.offsetWidth; 
+            target.classList.add('fade-in');
+        }
+
+        function startHomework() {
+            // Randomize questions
+            shuffleArray(homeworkData);
+            homeworkData.forEach(q => {
+                const correctText = q.options[q.correct];
+                shuffleArray(q.options);
+                q.correct = q.options.indexOf(correctText);
+            });
+
+            currentQ = 0;
+            score = 0;
+            updateTopBar();
+            renderQuestion();
+            showScreen('screen-quiz');
+        }
+
+        // --- QUIZ LOGIC ---
+        function updateTopBar() {
+            document.getElementById('progress-text').innerText = `${String(currentQ + 1).padStart(2, '0')} / ${homeworkData.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQ) / homeworkData.length) * 100}%`;
+            document.getElementById('score-text').innerText = String(score * 10).padStart(3, '0');
+        }
+
+        function renderQuestion() {
+            isLocked = false;
+            document.getElementById('next-btn-container').classList.add('hidden');
+            
+            const qData = homeworkData[currentQ];
+            const container = document.getElementById('question-container');
+            const letters = ['A', 'B', 'C'];
+
+            let html = `
+                <div class="mb-8 mt-4 animate-in fade-in">
+                    <h2 class="text-2xl font-black text-white leading-relaxed font-arcade uppercase tracking-widest text-glow-cyan">${qData.q.replace(/\[(.*?)\]/g, '<span class="text-[var(--neon-cyan)]">$1</span>')}</h2>
+                </div>
+                <div class="space-y-4 w-full animate-in fade-in" id="options-box" style="animation-delay: 0.1s; animation-fill-mode: both;">
+            `;
+
+            qData.options.forEach((opt, idx) => {
+                html += `
+                    <button class="mcq-option group" onclick="selectOption(${idx}, this)">
+                        <div class="w-10 h-10 rounded border border-gray-700 bg-[var(--bg-arcade)] flex items-center justify-center text-sm font-bold text-gray-400 mr-5 font-pixel group-hover:text-[var(--neon-yellow)] group-hover:border-[var(--neon-yellow)] transition-colors">${letters[idx]}</div>
+                        <span class="text-lg font-bold text-white font-inter tracking-wide">${opt}</span>
+                    </button>
+                `;
+            });
+
+            html += `
+                </div>
+                <div id="feedback-box" class="hidden mt-8 p-6 rounded bg-[var(--bg-inset)] border border-[var(--neon-cyan)] shadow-[0_0_15px_rgba(0,242,254,0.1)_inset] animate-in fade-in mb-8">
+                    <p class="text-[10px] font-bold text-[var(--neon-cyan)] uppercase tracking-[0.3em] font-pixel mb-3">> SYSTEM HINT</p>
+                    <p class="text-sm text-gray-300 font-inter font-medium leading-relaxed">${qData.hint}</p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            container.scrollTop = 0;
+        }
+
+        function selectOption(selectedIdx, btnEl) {
+            if (isLocked) return;
+            isLocked = true;
+
+            const qData = homeworkData[currentQ];
+            const isCorrect = selectedIdx === qData.correct;
+            const parent = document.getElementById('options-box');
+
+            // Lock buttons
+            Array.from(parent.children).forEach((child, i) => {
+                child.classList.add('locked-check');
+                if (i === qData.correct) {
+                    child.classList.add('correct'); 
+                } else if (i !== qData.correct && i === selectedIdx) {
+                    child.classList.add('wrong'); 
+                } else {
+                    child.classList.add('opacity-40'); 
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                shootConfetti();
+            } else {
+                // Error shake effect
+                document.getElementById('mobile-frame').classList.add('shake');
+                setTimeout(() => document.getElementById('mobile-frame').classList.remove('shake'), 400);
+                
+                // Show hint if wrong
+                const fbBox = document.getElementById('feedback-box');
+                fbBox.classList.remove('hidden');
+                fbBox.classList.replace('border-[var(--neon-cyan)]', 'border-[var(--neon-pink)]');
+                fbBox.querySelector('p').classList.replace('text-[var(--neon-cyan)]', 'text-[var(--neon-pink)]');
+            }
+
+            updateTopBar();
+            
+            // Show Next button
+            const nextBtn = document.getElementById('next-btn-container');
+            nextBtn.classList.remove('hidden');
+            nextBtn.style.animation = "fadeIn 0.3s ease forwards";
+            
+            // Scroll down
+            setTimeout(() => {
+                document.getElementById('question-container').scrollTo({
+                    top: document.getElementById('question-container').scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < homeworkData.length) {
+                updateTopBar();
+                renderQuestion();
+            } else {
+                document.getElementById('progress-bar').style.width = `100%`;
+                setTimeout(showResult, 300);
+            }
+        }
+
+        function showResult() {
+            showScreen('screen-result');
+            
+            document.getElementById('final-score').innerText = `${score}/15`;
+            
+            const rankEl = document.getElementById('result-rank');
+            const iconEl = document.getElementById('result-icon');
+            const titleEl = document.getElementById('result-title');
+
+            const percentage = score / homeworkData.length;
+
+            if (percentage === 1) {
+                titleEl.innerText = "Flawless Run";
+                rankEl.innerText = "Rank: Arcade Champion";
+                rankEl.className = "text-[10px] text-[var(--bg-arcade)] font-bold uppercase tracking-widest border border-[var(--neon-yellow)] px-4 py-1.5 bg-[var(--neon-yellow)] rounded mb-10 shadow-[0_0_15px_rgba(250,204,21,0.4)] font-pixel";
+                iconEl.innerHTML = '<i class="fas fa-trophy text-6xl text-[var(--neon-yellow)] text-glow-yellow"></i>';
+                iconEl.className = "w-32 h-32 rounded-xl bg-[var(--neon-yellow)]/10 mb-8 flex items-center justify-center border-4 border-[var(--neon-yellow)] shadow-[0_0_40px_rgba(250,204,21,0.4)_inset]";
+                shootConfetti(); setTimeout(shootConfetti, 500);
+            } else if (percentage >= 0.7) {
+                titleEl.innerText = "Level Cleared";
+                rankEl.innerText = "Rank: Challenger";
+                rankEl.className = "text-[10px] text-[var(--bg-arcade)] font-bold uppercase tracking-widest border border-[var(--neon-cyan)] px-4 py-1.5 bg-[var(--neon-cyan)] rounded mb-10 shadow-[0_0_15px_rgba(0,242,254,0.4)] font-pixel";
+                iconEl.innerHTML = '<i class="fas fa-star text-6xl text-[var(--neon-cyan)] text-glow-cyan"></i>';
+            } else {
+                titleEl.innerText = "Game Over";
+                rankEl.innerText = "Rank: Player 2";
+                rankEl.className = "text-[10px] text-white font-bold uppercase tracking-widest border border-[var(--neon-pink)] px-4 py-1.5 bg-[var(--neon-pink)]/20 rounded mb-10 shadow-sm font-pixel";
+                iconEl.className = "w-32 h-32 rounded-xl bg-[var(--bg-inset)] mb-8 flex items-center justify-center border-4 border-[var(--neon-pink)] shadow-[0_0_40px_rgba(254,9,121,0.2)_inset]";
+                iconEl.innerHTML = '<i class="fas fa-skull text-6xl text-[var(--neon-pink)] text-glow-pink"></i>';
+            }
+        }
+
+        // --- UTILS ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- CONFETTI ENGINE (SYNTHWAVE STYLE) ---
+        function shootConfetti() {
+            const cCanvas = document.getElementById('confetti-canvas'); 
+            const cCtx = cCanvas.getContext('2d');
+            const frame = document.getElementById('mobile-frame');
+            cCanvas.width = frame.offsetWidth; 
+            cCanvas.height = frame.offsetHeight;
+            
+            const pieces = []; 
+            const colors = ['#00f2fe', '#fe0979', '#facc15', '#f8fafc'];
+            
+            for(let i=0; i<40; i++) {
+                pieces.push({ 
+                    x: cCanvas.width / 2, 
+                    y: cCanvas.height / 2, 
+                    vx: (Math.random() - 0.5) * 16, 
+                    vy: (Math.random() - 1) * 16 - 4, 
+                    size: Math.random() * 8 + 4, 
+                    color: colors[Math.floor(Math.random() * colors.length)], 
+                    rot: Math.random() * 360, 
+                    rotSpeed: (Math.random() - 0.5) * 10 
+                });
+            }
+            
+            let animationId;
+            function animateC() {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height); 
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; 
+                    p.y += p.vy; 
+                    p.vy += 0.5; // gravity
+                    p.rot += p.rotSpeed; 
+                    if(p.y < cCanvas.height) active = true;
+                    
+                    cCtx.save(); 
+                    cCtx.translate(p.x, p.y); 
+                    cCtx.rotate(p.rot * Math.PI / 180); 
+                    cCtx.fillStyle = p.color; 
+                    // Square confetti (Pixels)
+                    cCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size); 
+                    cCtx.restore(); 
+                });
+                
+                if(active) {
+                    animationId = requestAnimationFrame(animateC); 
+                } else {
+                    cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                }
+            }
+            animateC();
+        }
+    </script>
+</body>
+</html>
